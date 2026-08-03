@@ -1,0 +1,11 @@
+/docs/
+/.idea/
+/.vscode/
+/vendor/
+/node_modules/
+*.log
+*.tmp
+*.zip
+*.tar.gz
+.DS_Store
+Thumbs.db
