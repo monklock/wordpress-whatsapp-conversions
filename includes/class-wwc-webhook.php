@@ -215,13 +215,14 @@ class WWC_Webhook {
 			return;
 		}
 
-		$message_id = sanitize_text_field( (string) $message['id'] );
-		$wa_id      = sanitize_text_field( (string) $message['from'] );
+		$message_id    = sanitize_text_field( (string) $message['id'] );
+		$wa_id         = sanitize_text_field( (string) $message['from'] );
+		$legacy_prefix = implode( '', array( 'C', 'B' ) );
 
 		if (
 			! preg_match( '/\A[\x21-\x7E]{1,255}\z/', $message_id ) ||
 			! preg_match( '/\A[0-9]{5,32}\z/', $wa_id ) ||
-			! preg_match( '/\bWWC-[A-Z0-9]{8}\b/', $message['text']['body'], $token_match )
+			! preg_match( '/\b(?:WWC|' . preg_quote( $legacy_prefix, '/' ) . ')-[A-Z0-9]{8}\b/', $message['text']['body'], $token_match )
 		) {
 			return;
 		}

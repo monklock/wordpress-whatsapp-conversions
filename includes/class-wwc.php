@@ -67,7 +67,7 @@ class WWC {
 				);
 			}
 
-			wp_clear_scheduled_hook( 'wwc_daily_maintenance' );
+			wp_unschedule_hook( 'wwc_daily_maintenance' );
 
 			return;
 		}

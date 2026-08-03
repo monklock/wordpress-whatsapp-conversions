@@ -15,7 +15,7 @@
 defined( 'ABSPATH' ) || exit;
 
 define( 'WWC_VERSION', '1.0.0' );
-define( 'WWC_DB_VERSION', '1.0.0' );
+define( 'WWC_DB_VERSION', '1.1.0' );
 define( 'WWC_PLUGIN_FILE', __FILE__ );
 define( 'WWC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -24,6 +24,7 @@ require_once WWC_PLUGIN_DIR . 'includes/class-wwc-deactivator.php';
 
 register_activation_hook( __FILE__, array( 'WWC_Activator', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'WWC_Deactivator', 'deactivate' ) );
+add_action( 'plugins_loaded', array( 'WWC_Activator', 'maybe_upgrade' ), 5 );
 
 require_once WWC_PLUGIN_DIR . 'includes/class-wwc.php';
 

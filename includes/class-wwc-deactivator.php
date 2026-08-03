@@ -22,7 +22,7 @@ class WWC_Deactivator {
 			as_unschedule_all_actions( '', array(), 'wwc' );
 		}
 
-		wp_clear_scheduled_hook( 'wwc_daily_maintenance' );
-		wp_clear_scheduled_hook( 'wwc_send_ga4_event' );
+		wp_unschedule_hook( 'wwc_daily_maintenance' );
+		wp_unschedule_hook( 'wwc_send_ga4_event' );
 	}
 }

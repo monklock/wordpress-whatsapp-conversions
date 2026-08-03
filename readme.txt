@@ -21,6 +21,10 @@ Opening WhatsApp without sending a message is not a conversion.
 4. Activate the plugin in WordPress.
 5. Configure the Meta callback URL as `/wp-json/wordpress-whatsapp-conversions/v1/webhook` and subscribe to `messages`.
 
+The page slug, WhatsApp message text, and allowed `from` sources can be customized with the `wwc_redirect_page_slug`, `wwc_whatsapp_message_text`, and `wwc_allowed_sources` filters.
+
+When upgrading from an early build, rename the constants in `wp-config.php`. Existing intents are migrated to the generic table automatically; back up the database first.
+
 See `README.md` for complete Russian and English setup instructions.
 
 == Frequently Asked Questions ==
@@ -46,3 +50,4 @@ The plugin does not store message text or customer phone numbers. WhatsApp sende
 = 1.0.0 =
 
 * Initial release.
+* Added generic plugin identifiers, legacy data migration, and site customization filters.

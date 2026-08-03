@@ -36,7 +36,7 @@ class WWC_Public {
 	 * @return void
 	 */
 	public function handle_redirect(): void {
-		if ( ! is_page( 'go-whatsapp' ) ) {
+		if ( ! is_page( $this->get_redirect_page_slug() ) ) {
 			return;
 		}
 
@@ -71,12 +71,48 @@ class WWC_Public {
 			);
 		}
 
-		$message      = "Hola, quisiera recibir más información.\n\nRef: {$token}";
+		$message      = $this->get_message_text( $source ) . "\n\nRef: {$token}";
 		$whatsapp_url = 'https://wa.me/' . $phone . '?text=' . rawurlencode( $message );
 
 		add_filter( 'allowed_redirect_hosts', array( $this, 'allow_whatsapp_host' ) );
 		wp_safe_redirect( $whatsapp_url, 302, 'WordPress WhatsApp Conversions' );
 		exit;
+	}
+
+	/**
+	 * Return the site-specific redirect page slug.
+	 *
+	 * @return string
+	 */
+	private function get_redirect_page_slug(): string {
+		$value = apply_filters( 'wwc_redirect_page_slug', 'go-whatsapp' );
+
+		if ( ! is_scalar( $value ) ) {
+			return 'go-whatsapp';
+		}
+
+		$slug = sanitize_title( (string) $value );
+
+		return '' !== $slug ? $slug : 'go-whatsapp';
+	}
+
+	/**
+	 * Return the customizable message text without the required intent token.
+	 *
+	 * @param string $source Normalized intent source.
+	 * @return string
+	 */
+	private function get_message_text( string $source ): string {
+		$default = __( 'Hello, I would like more information.', 'wordpress-whatsapp-conversions' );
+		$value   = apply_filters( 'wwc_whatsapp_message_text', $default, $source );
+
+		if ( ! is_scalar( $value ) ) {
+			return $default;
+		}
+
+		$message = trim( sanitize_textarea_field( (string) $value ) );
+
+		return '' !== $message ? $message : $default;
 	}
 
 	/**
@@ -116,9 +152,25 @@ class WWC_Public {
 	 * @return string
 	 */
 	private function get_source(): string {
-		$source = $this->get_query_value( 'from' );
+		$source          = $this->get_query_value( 'from' );
+		$allowed_sources = apply_filters( 'wwc_allowed_sources', self::ALLOWED_SOURCES );
 
-		if ( null === $source || ! in_array( $source, self::ALLOWED_SOURCES, true ) ) {
+		if ( ! is_array( $allowed_sources ) ) {
+			$allowed_sources = self::ALLOWED_SOURCES;
+		}
+
+		$allowed_sources = array_values(
+			array_unique(
+				array_filter(
+					array_map(
+						static fn( $value ): string => is_scalar( $value ) ? sanitize_key( (string) $value ) : '',
+						$allowed_sources
+					)
+				)
+			)
+		);
+
+		if ( null === $source || ! in_array( $source, $allowed_sources, true ) ) {
 			return 'unknown';
 		}
 
