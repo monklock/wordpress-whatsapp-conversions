@@ -18,6 +18,10 @@ class WWC_Deactivator {
 	 * @return void
 	 */
 	public static function deactivate(): void {
+		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+			as_unschedule_all_actions( '', array(), 'wwc' );
+		}
+
 		wp_clear_scheduled_hook( 'wwc_daily_maintenance' );
 		wp_clear_scheduled_hook( 'wwc_send_ga4_event' );
 	}

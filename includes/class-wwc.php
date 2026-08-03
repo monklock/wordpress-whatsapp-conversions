@@ -8,6 +8,7 @@
 defined( 'ABSPATH' ) || exit;
 
 require_once WWC_PLUGIN_DIR . 'includes/class-wwc-loader.php';
+require_once WWC_PLUGIN_DIR . 'includes/class-wwc-ga4.php';
 require_once WWC_PLUGIN_DIR . 'includes/class-wwc-webhook.php';
 require_once WWC_PLUGIN_DIR . 'public/class-wwc-public.php';
 
@@ -31,6 +32,7 @@ class WWC {
 		$this->define_core_hooks();
 		$this->define_public_hooks();
 		$this->define_webhook_hooks();
+		$this->define_ga4_hooks();
 	}
 
 	/**
@@ -48,6 +50,23 @@ class WWC {
 	 * @return void
 	 */
 	public function ensure_maintenance_schedule(): void {
+		if ( function_exists( 'as_schedule_recurring_action' ) && function_exists( 'as_has_scheduled_action' ) ) {
+			if ( ! as_has_scheduled_action( 'wwc_daily_maintenance', array(), WWC_GA4::ACTION_GROUP ) ) {
+				as_schedule_recurring_action(
+					time() + HOUR_IN_SECONDS,
+					DAY_IN_SECONDS,
+					'wwc_daily_maintenance',
+					array(),
+					WWC_GA4::ACTION_GROUP,
+					true
+				);
+			}
+
+			wp_clear_scheduled_hook( 'wwc_daily_maintenance' );
+
+			return;
+		}
+
 		if ( ! wp_next_scheduled( 'wwc_daily_maintenance' ) ) {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'wwc_daily_maintenance' );
 		}
@@ -81,6 +100,7 @@ class WWC {
 	 */
 	private function define_core_hooks(): void {
 		$this->loader->add_action( 'init', $this, 'ensure_maintenance_schedule' );
+		$this->loader->add_action( 'action_scheduler_ensure_recurring_actions', $this, 'ensure_maintenance_schedule' );
 		$this->loader->add_action( 'wwc_daily_maintenance', $this, 'run_daily_maintenance' );
 	}
 
@@ -105,5 +125,18 @@ class WWC {
 
 		$this->loader->add_action( 'rest_api_init', $webhook, 'register_routes' );
 		$this->loader->add_filter( 'rest_pre_serve_request', $webhook, 'serve_plain_challenge', 10, 4 );
+	}
+
+	/**
+	 * Register GA4 hooks.
+	 *
+	 * @return void
+	 */
+	private function define_ga4_hooks(): void {
+		$ga4 = new WWC_GA4();
+
+		$this->loader->add_action( 'wwc_intent_converted', $ga4, 'schedule_event', 10, 2 );
+		$this->loader->add_action( 'wwc_send_ga4_event', $ga4, 'send_event' );
+		$this->loader->add_action( 'wwc_daily_maintenance', $ga4, 'schedule_pending_events' );
 	}
 }
