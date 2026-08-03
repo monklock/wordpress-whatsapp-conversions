@@ -8,6 +8,7 @@
 defined( 'ABSPATH' ) || exit;
 
 require_once WWC_PLUGIN_DIR . 'includes/class-wwc-loader.php';
+require_once WWC_PLUGIN_DIR . 'includes/class-wwc-webhook.php';
 require_once WWC_PLUGIN_DIR . 'public/class-wwc-public.php';
 
 /**
@@ -29,6 +30,7 @@ class WWC {
 		$this->loader = new WWC_Loader();
 		$this->define_core_hooks();
 		$this->define_public_hooks();
+		$this->define_webhook_hooks();
 	}
 
 	/**
@@ -91,5 +93,17 @@ class WWC {
 		$public = new WWC_Public();
 
 		$this->loader->add_action( 'template_redirect', $public, 'handle_redirect', 1 );
+	}
+
+	/**
+	 * Register webhook hooks.
+	 *
+	 * @return void
+	 */
+	private function define_webhook_hooks(): void {
+		$webhook = new WWC_Webhook();
+
+		$this->loader->add_action( 'rest_api_init', $webhook, 'register_routes' );
+		$this->loader->add_filter( 'rest_pre_serve_request', $webhook, 'serve_plain_challenge', 10, 4 );
 	}
 }
